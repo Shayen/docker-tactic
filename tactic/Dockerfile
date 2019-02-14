@@ -24,9 +24,19 @@ RUN echo 'export PS1="[\u@docker] \W # "' >> /root/.bash_profile
 # Install dependecies
 RUN /bin/rpm -Uvh https://yum.postgresql.org/9.4/redhat/rhel-6-x86_64/pgdg-centos94-9.4-3.noarch.rpm && \
     yum -y update && \
-    yum -y install initscripts httpd postgresql94-server postgresql94 postgresql94-contrib python-lxml python-imaging python-crypto python-psycopg2 unzip git ImageMagick
+    yum -y install httpd postgresql94-server postgresql94 postgresql94-contrib unzip git ImageMagick
+    #  Install initscripts
 # TODO add ffmpeg
 
+# Install  GCC
+RUN yum -y install gcc openssl-devel bzip2-devel wget && \
+    wget https://www.python.org/ftp/python/2.7.15/Python-2.7.15.tgz && \
+    tar xzf Python-2.7.15.tgz && \
+    cd Python-2.7.15 && \
+    ./configure --enable-optimizations --prefix=/usr/local/ && \
+    make && make altinstall && \
+    export PATH="/usr/local/bin:$PATH" && \
+    yum -y install python-lxml python-imaging python-crypto python-psycopg2
 
 # install supervisord
 RUN yum -y install python-setuptools && \
@@ -67,7 +77,7 @@ RUN ls /var/lib/pgsql/ && \
     cp TACTIC/src/install/postgresql/pg_hba.conf /var/lib/pgsql/9.4/data/pg_hba.conf && \
     chown postgres:postgres /var/lib/pgsql/9.4/data/pg_hba.conf && \
     /etc/init.d/postgresql-9.4 start && \
-    yes | python TACTIC/src/install/install.py -d && \
+    yes | /usr/local/bin/python2.7 TACTIC/src/install/install.py -d && \
     /etc/init.d/postgresql-9.4 stop && \
     cp /home/apache/tactic_data/config/tactic.conf /etc/httpd/conf.d/ && \
     rm -r TACTIC
