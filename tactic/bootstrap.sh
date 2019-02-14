@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "Bootstap is running ..."
 set -e
 
 # Set root password

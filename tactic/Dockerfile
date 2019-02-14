@@ -22,12 +22,14 @@ ENV HOME /root
 RUN echo 'export PS1="[\u@docker] \W # "' >> /root/.bash_profile
 
 # Install dependecies
-RUN yum -y install httpd postgresql postgresql-server postgresql-contrib python-lxml python-imaging python-crypto python-psycopg2 unzip git ImageMagick
+RUN /bin/rpm -Uvh https://yum.postgresql.org/9.4/redhat/rhel-6-x86_64/pgdg-centos94-9.4-3.noarch.rpm && \
+    yum -y update && \
+    yum -y install initscripts httpd postgresql94-server postgresql94 postgresql94-contrib python-lxml python-imaging python-crypto python-psycopg2 unzip git ImageMagick
 # TODO add ffmpeg
 
+
 # install supervisord
-RUN /bin/rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm && \
-    yum -y install python-setuptools && \
+RUN yum -y install python-setuptools && \
     easy_install supervisor && \
     mkdir -p /var/log/supervisor && \ 
     mkdir -p /etc/supervisor/conf.d/
@@ -35,9 +37,19 @@ ADD supervisord.conf /etc/supervisor/supervisord.conf
 
 # Ssh server
 # start and stop the server to make it generate host keys
+# RUN yum -y install openssh-server && \
+#     cat /usr/lib/systemd/system/sshd@.service && \
+#     cat /usr/lib/systemd/system/sshd-keygen.service && \
+#     all_lines=`cat $filename` && \
+#     for i in $all_lines; do eval"export $i"; done && \
+#     /usr/sbin/sshd-keygen
+
+# Ssh server
+# start and stop the server to make it generate host keys
 RUN yum -y install openssh-server && \
     service sshd start && \
     service sshd stop
+
 # set root passord at image launch with -e ROOT_PASSWORD=my_secure_password
 ADD bootstrap.sh /usr/local/bin/bootstrap.sh
 
@@ -45,15 +57,18 @@ ADD bootstrap.sh /usr/local/bin/bootstrap.sh
 RUN yum clean all
 
 # initialize postgresql data files
-RUN service postgresql initdb
+RUN /etc/init.d/postgresql-9.4 initdb
+
+# Init Git
+RUN git clone -b 4.6 --depth 1 https://github.com/Southpaw-TACTIC/TACTIC.git
 
 # get and install Tactic
-RUN git clone -b 4.5 --depth 1 https://github.com/Southpaw-TACTIC/TACTIC.git && \
-    cp TACTIC/src/install/postgresql/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf && \
-    chown postgres:postgres /var/lib/pgsql/data/pg_hba.conf && \
-    service postgresql start && \
+RUN ls /var/lib/pgsql/ && \
+    cp TACTIC/src/install/postgresql/pg_hba.conf /var/lib/pgsql/9.4/data/pg_hba.conf && \
+    chown postgres:postgres /var/lib/pgsql/9.4/data/pg_hba.conf && \
+    /etc/init.d/postgresql-9.4 start && \
     yes | python TACTIC/src/install/install.py -d && \
-    service postgresql stop && \
+    /etc/init.d/postgresql-9.4 stop && \
     cp /home/apache/tactic_data/config/tactic.conf /etc/httpd/conf.d/ && \
     rm -r TACTIC
 

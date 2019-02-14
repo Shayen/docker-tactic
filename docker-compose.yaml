@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+    # db:
+    #     image: centos/postgresql-96-centos7
+    #     command : []
+    tactic:
+        build: "./tactic"
