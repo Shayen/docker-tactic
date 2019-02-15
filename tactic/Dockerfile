@@ -29,14 +29,22 @@ RUN /bin/rpm -Uvh https://yum.postgresql.org/9.4/redhat/rhel-6-x86_64/pgdg-cento
 # TODO add ffmpeg
 
 # Install  GCC
-RUN yum -y install gcc openssl-devel bzip2-devel wget && \
-    wget https://www.python.org/ftp/python/2.7.15/Python-2.7.15.tgz && \
-    tar xzf Python-2.7.15.tgz && \
-    cd Python-2.7.15 && \
-    ./configure --enable-optimizations --prefix=/usr/local/ && \
-    make && make altinstall && \
-    export PATH="/usr/local/bin:$PATH" && \
-    yum -y install python-lxml python-imaging python-crypto python-psycopg2
+# RUN yum -y install gcc openssl-devel bzip2-devel wget && \
+    # wget https://www.python.org/ftp/python/2.7.15/Python-2.7.15.tgz && \
+    # tar xzf Python-2.7.15.tgz && \
+    # cd Python-2.7.15 && \
+    # ./configure --enable-optimizations --prefix=/usr/local/ && \
+    # make && make altinstall && \
+    # export PATH="/usr/local/bin:$PATH"
+
+RUN yum -y install scl-utils && \
+    yum -y install scl-utils && \
+    yum -y install centos-release-scl-rh && \
+    yum -y install python27 && \
+    scl enable python27 bash && \
+    export PYTHONPATH="/usr/lib/python2.7/site-packages/":$PYTHONPATH
+
+RUN yum -y install python-lxml python-imaging python-crypto python-psycopg2
 
 # install supervisord
 RUN yum -y install python-setuptools && \
@@ -71,13 +79,20 @@ RUN /etc/init.d/postgresql-9.4 initdb
 
 # Init Git
 RUN git clone -b 4.6 --depth 1 https://github.com/Southpaw-TACTIC/TACTIC.git
+# RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
+# RUN /usr/local/bin/python2.7 get-pip.py
+# RUN /usr/local/bin/python2.7 -m pip install lxml pillow crypto psycopg2 
+# RUN /usr/local/bin/python2.7 -m pip install Crypto
+# RUN /usr/local/bin/python2.7 -c "import Crypto"
+
+RUN python -V
 
 # get and install Tactic
 RUN ls /var/lib/pgsql/ && \
     cp TACTIC/src/install/postgresql/pg_hba.conf /var/lib/pgsql/9.4/data/pg_hba.conf && \
     chown postgres:postgres /var/lib/pgsql/9.4/data/pg_hba.conf && \
     /etc/init.d/postgresql-9.4 start && \
-    yes | /usr/local/bin/python2.7 TACTIC/src/install/install.py -d && \
+    yes | python TACTIC/src/install/install.py -d && \
     /etc/init.d/postgresql-9.4 stop && \
     cp /home/apache/tactic_data/config/tactic.conf /etc/httpd/conf.d/ && \
     rm -r TACTIC
