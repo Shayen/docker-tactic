@@ -107,4 +107,5 @@ RUN ls /var/lib/pgsql/ && \
 # EXPOSE 80 22
 
 # Start Tactic stack
+RUN chmod +x /usr/local/bin/bootstrap.sh
 CMD ["/usr/local/bin/bootstrap.sh"]
