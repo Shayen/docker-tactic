@@ -6,3 +6,7 @@ services:
     #     command : []
     tactic:
         build: "./tactic"
+        environment:
+            ROOT_PASSWORD: tactic
+        ports:
+            - "8070:80"

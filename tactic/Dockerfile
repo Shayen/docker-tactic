@@ -29,28 +29,35 @@ RUN /bin/rpm -Uvh https://yum.postgresql.org/9.4/redhat/rhel-6-x86_64/pgdg-cento
 # TODO add ffmpeg
 
 # Install  GCC
-# RUN yum -y install gcc openssl-devel bzip2-devel wget && \
-    # wget https://www.python.org/ftp/python/2.7.15/Python-2.7.15.tgz && \
-    # tar xzf Python-2.7.15.tgz && \
-    # cd Python-2.7.15 && \
-    # ./configure --enable-optimizations --prefix=/usr/local/ && \
-    # make && make altinstall && \
-    # export PATH="/usr/local/bin:$PATH"
+RUN yum -y install gcc openssl-devel bzip2-devel wget && \
+    wget https://www.python.org/ftp/python/2.7.15/Python-2.7.15.tgz && \
+    tar xzf Python-2.7.15.tgz && \
+    cd Python-2.7.15 && \
+    ./configure --prefix=/usr/local && \
+    make && make altinstall
 
-RUN yum -y install scl-utils && \
-    yum -y install scl-utils && \
-    yum -y install centos-release-scl-rh && \
-    yum -y install python27 && \
-    scl enable python27 bash && \
-    export PYTHONPATH="/usr/lib/python2.7/site-packages/":$PYTHONPATH
+# RUN yum -y install centos-release-scl && \
+#     yum -y install python27 && \
+#     scl enable python27 bash
 
-RUN yum -y install python-lxml python-imaging python-crypto python-psycopg2
+# RUN cd /opt/rh/python27/root/usr/bin/; ls
+
+RUN python2.7 -V
+# RUN yum -y install python-lxml python-imaging python-crypto python-psycopg2
+# Install setuptools + pip
+RUN cd /tmp && \
+    wget --no-check-certificate https://pypi.python.org/packages/source/s/setuptools/setuptools-1.4.2.tar.gz && \
+    tar -xvf setuptools-1.4.2.tar.gz && \
+    cd setuptools-1.4.2 && \
+    python2.7 setup.py install && \
+    curl https://bootstrap.pypa.io/get-pip.py | python2.7 - 
+
+RUN python2.7 -m pip install lxml pillow pycrypto psycopg2-binary supervisor
 
 # install supervisord
-RUN yum -y install python-setuptools && \
-    easy_install supervisor && \
-    mkdir -p /var/log/supervisor && \ 
-    mkdir -p /etc/supervisor/conf.d/
+RUN mkdir -p /var/log/supervisor && \ 
+    mkdir -p /etc/supervisor/conf.d 
+
 ADD supervisord.conf /etc/supervisor/supervisord.conf
 
 # Ssh server
@@ -64,7 +71,7 @@ ADD supervisord.conf /etc/supervisor/supervisord.conf
 
 # Ssh server
 # start and stop the server to make it generate host keys
-RUN yum -y install openssh-server && \
+RUN yum -y install openssh-server postmaster && \
     service sshd start && \
     service sshd stop
 
@@ -92,12 +99,12 @@ RUN ls /var/lib/pgsql/ && \
     cp TACTIC/src/install/postgresql/pg_hba.conf /var/lib/pgsql/9.4/data/pg_hba.conf && \
     chown postgres:postgres /var/lib/pgsql/9.4/data/pg_hba.conf && \
     /etc/init.d/postgresql-9.4 start && \
-    yes | python TACTIC/src/install/install.py -d && \
+    yes | python2.7 TACTIC/src/install/install.py -d && \
     /etc/init.d/postgresql-9.4 stop && \
     cp /home/apache/tactic_data/config/tactic.conf /etc/httpd/conf.d/ && \
     rm -r TACTIC
 
-EXPOSE 80 22
+# EXPOSE 80 22
 
 # Start Tactic stack
 CMD ["/usr/local/bin/bootstrap.sh"]
