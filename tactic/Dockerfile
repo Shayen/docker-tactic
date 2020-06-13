@@ -85,7 +85,7 @@ RUN yum clean all
 RUN /etc/init.d/postgresql-9.4 initdb
 
 # Init Git
-RUN git clone -b 4.6 --depth 1 https://github.com/Southpaw-TACTIC/TACTIC.git
+RUN git clone -b 4.8 --depth 1 https://github.com/Southpaw-TACTIC/TACTIC.git
 # RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
 # RUN /usr/local/bin/python2.7 get-pip.py
 # RUN /usr/local/bin/python2.7 -m pip install lxml pillow crypto psycopg2 
